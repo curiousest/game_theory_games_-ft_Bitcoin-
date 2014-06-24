@@ -3,28 +3,31 @@ from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.test import TestCase
 
-from gametheorygames.views import home_page, losing_game
+from gametheorygames.views import home_page, losing_game, play_losing_game
 
-class HomePageTest(TestCase):
+def resolves_to_view(self, url, view):
+	found = resolve(url)
+	self.assertEqual(found.func, view)
 	
-	def test_root_url_resolves_to_home_page_view(self):
-		found = resolve('/')
-		self.assertEqual(found.func, home_page)
-
-	def test_home_page_returns_correct_html(self):
-		request = HttpRequest()
-		response = home_page(request)
-		expected_html = render_to_string('home.html')
-		self.assertEqual(response.content.decode(), expected_html)
-
-class NewGameTest(TestCase):
+def returns_correct_html(self, template, view):
+	request = HttpRequest()
+	response = view(request)
+	expected_html = render_to_string(template)
+	self.assertEqual(response.content.decode(), expected_html)
 	
-	def test_game_pages_resolve(self):
-		found = resolve('/gametheorygames/losing_game')
-		self.assertEqual(found.func, losing_game)
+class AllPagesTest(TestCase):
+	ALL_PAGES_DEF = [
+		{'url': '/', 'template': 'home.html', 'view': home_page},
+		{'url': '/gametheorygames/losing_game', 'template': 'losing_game.html', 'view': losing_game},
+		{'url': '/gametheorygames/play_losing_game', 'template': 'play_losing_game.html', 'view': play_losing_game}
+	]
+	
+	def test_all_pages_resolve(self):
+		for page in self.ALL_PAGES_DEF:
+			resolves_to_view(self, page['url'], page['view'])
+	
+	def test_all_pages_return_correct_html(self):
+		for page in self.ALL_PAGES_DEF:
+			returns_correct_html(self, page['template'], page['view'])
 
-	def test_game_page_returns_correct_html(self):
-		request = HttpRequest()
-		response = losing_game(request)
-		expected_html = render_to_string('losing_game.html')
-		self.assertEqual(response.content.decode(), expected_html)
+
