@@ -7,5 +7,5 @@ def home_page(request):
 def losing_game(request):
 	return render(request, 'losing_game.html')
 	
-def play_losing_game(request):
+def play_losing_game(request, id):
 	return render(request, 'play_losing_game.html')
