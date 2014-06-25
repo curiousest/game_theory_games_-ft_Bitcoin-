@@ -47,7 +47,9 @@ class PlayLosingGameTest(TestCase):
 		found = resolve('/gametheorygames/play_losing_game/%d/' % (game.id,))
 		self.assertEqual(found.func, play_losing_game)
 		
-	def test_losing_game_page_wrong_id(self):
-		pass
+	def test_create_losing_game_from_POST(self):
+		self.client.post('/gametheorygames/losing_game/new')
+		
+		self.assertEqual(Game.objects.count(), 1)
 
 

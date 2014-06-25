@@ -32,9 +32,12 @@ class NewVisitorTest(FunctionalTest):
 		
 		# She is taken to the game page and sees that she has a special url for her game
 		self.assertIn('Playing The Losing Game', self.browser.title)
+		ida_game_url = self.browser.current_url
+		self.assertRegex(ida_game_url, '/play_losing_game/.+')
 		
-		# She sees an address to send BTC to
-		# She sees the amount that she has to send to that address
+		# She sees an address to send BTC to and the amount that she has to send to that address
+		#BTC_address = self.browser.find_element_by_id('id_BTC_receiving_address')
+		
 		# She sends BTC to that address
 		# She went to a different page to send BTC. She returns to her special URL to continue playing. 
 		# She is congratulated for playing 
