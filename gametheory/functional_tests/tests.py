@@ -1,5 +1,8 @@
 from .base import FunctionalTest
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 class NewVisitorTest(FunctionalTest):
@@ -36,19 +39,23 @@ class NewVisitorTest(FunctionalTest):
 		self.assertRegex(ida_game_url, '/losing_game/.+')
 		
 		# She sees an address to send BTC to and the amount that she has to send to that address
-		BTC_address = self.browser.find_element_by_id('id_BTC_receiving_address')
-		self.assertEqual(losing_game_address, BTC_address.text)
+		coinbase_iframe = self.browser.find_element_by_css_selector('iframe')
+		self.assertEqual(coinbase_iframe.get_attribute('src'), 'https://coinbase.com/inline_payments/4d4b84bbad4508b64b61d372ea394dad')
 		
 		# She sends BTC to that address
 		
 		
-		# She went to a different page to send BTC. She returns to her special URL to continue playing. 
-		self.browser.get('www.bing.com')
+		# The game recognizes that she has sent the money and updates Ida's game page
+		# She is told that she lost and is thanked for playing
+		wait = WebDriverWait(self.browser, 20)
+			
+		win_lose_message = self.browser.find_element_by_id('id_win_lose_message')
+		self.assertIn('game finished', win_lose_message.text)
+		self.assertIn('you lose', win_lose_message.text)
+		
+		# She leaves for a second, then returns to her special URL to look at her result again. 
+		self.browser.get('http://www.bing.com')
 		self.browser.get(ida_game_url)
 		
-		# The game recognizes that she has sent the money
-		# She is told that she lost and is thanked for playing 
-		win_lose_message = self.browser.find_element_by_id('id_win_lose_message')
-		self.assertIn('thanks', win_lose_message.text)
-		self.assertIn('you lose', win_lose_message.text)
+		
 		
