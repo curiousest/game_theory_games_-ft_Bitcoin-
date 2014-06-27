@@ -39,12 +39,12 @@ class PlayLosingGameTest(TestCase):
 	
 	def test_uses_losing_game_template(self):
 		game = Game.objects.create()
-		response = self.client.get('/gametheorygames/play_losing_game/%d/' % (game.id,))
+		response = self.client.get('/gametheorygames/losing_game/%d/' % (game.id,))
 		self.assertTemplateUsed(response, 'play_losing_game.html')
 	
 	def test_losing_game_resolves_to_view(self):
 		game = Game.objects.create()
-		found = resolve('/gametheorygames/play_losing_game/%d/' % (game.id,))
+		found = resolve('/gametheorygames/losing_game/%d/' % (game.id,))
 		self.assertEqual(found.func, play_losing_game)
 		
 	def test_create_losing_game_from_POST(self):

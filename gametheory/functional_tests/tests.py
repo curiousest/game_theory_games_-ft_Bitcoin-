@@ -33,13 +33,22 @@ class NewVisitorTest(FunctionalTest):
 		# She is taken to the game page and sees that she has a special url for her game
 		self.assertIn('Playing The Losing Game', self.browser.title)
 		ida_game_url = self.browser.current_url
-		self.assertRegex(ida_game_url, '/play_losing_game/.+')
+		self.assertRegex(ida_game_url, '/losing_game/.+')
 		
 		# She sees an address to send BTC to and the amount that she has to send to that address
-		#BTC_address = self.browser.find_element_by_id('id_BTC_receiving_address')
+		BTC_address = self.browser.find_element_by_id('id_BTC_receiving_address')
+		self.assertEqual(losing_game_address, BTC_address.text)
 		
 		# She sends BTC to that address
-		# She went to a different page to send BTC. She returns to her special URL to continue playing. 
-		# She is congratulated for playing 
 		
-		self.fail("finish the test")
+		
+		# She went to a different page to send BTC. She returns to her special URL to continue playing. 
+		self.browser.get('www.bing.com')
+		self.browser.get(ida_game_url)
+		
+		# The game recognizes that she has sent the money
+		# She is told that she lost and is thanked for playing 
+		win_lose_message = self.browser.find_element_by_id('id_win_lose_message')
+		self.assertIn('thanks', win_lose_message.text)
+		self.assertIn('you lose', win_lose_message.text)
+		
