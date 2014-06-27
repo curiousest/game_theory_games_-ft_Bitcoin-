@@ -51,5 +51,24 @@ class PlayLosingGameTest(TestCase):
 		self.client.post('/gametheorygames/losing_game/new')
 		
 		self.assertEqual(Game.objects.count(), 1)
+		
+	def test_create_losing_game_sends_Coinbase_iframe_request(self):
+		pass
+		
+	def test_create_losing_game_has_unique_order_number(self):
+		pass
 
+	def test_game_initial_state_correct(self):
+		pass
 
+	def test_bitcoin_received_callback_url_resolves(self):
+		pass
+		
+	def test_bitcoin_received_callback_url_changes_game_state(self):
+		pass
+		
+	def test_page_checks_game_state_change(self):
+		pass
+	
+	def test_game_completed_uses_game_completed_template(self):
+		pass

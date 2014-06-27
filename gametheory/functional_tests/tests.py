@@ -43,8 +43,6 @@ class NewVisitorTest(FunctionalTest):
 		self.assertEqual(coinbase_iframe.get_attribute('src'), 'https://coinbase.com/inline_payments/4d4b84bbad4508b64b61d372ea394dad')
 		
 		# She sends BTC to that address
-		
-		
 		# The game recognizes that she has sent the money and updates Ida's game page
 		# She is told that she lost and is thanked for playing
 		wait = WebDriverWait(self.browser, 20)
@@ -57,5 +55,29 @@ class NewVisitorTest(FunctionalTest):
 		self.browser.get('http://www.bing.com')
 		self.browser.get(ida_game_url)
 		
+		win_lose_message = self.browser.find_element_by_id('id_win_lose_message')
+		self.assertIn('game finished', win_lose_message.text)
+		self.assertIn('you lose', win_lose_message.text)
 		
+	def test_three_people_play_losing_game(self):
+		pass
+		# Ida chooses to play the losing game
+		# She sees the play game page
 		
+		# Peter chooses to play the losing game
+		# He sees the play game page
+		# His game page url is different
+		# Peter sends BTC
+		# The game recognizes that he has sent the money and updates Peter's game page
+		# He is told that she lost and is thanked for playing
+		
+		# Ida's game page remains unchanged
+		
+		# Norma chooses to play the losing game
+		# She sees the play game page
+		
+		# Ida sends BTC
+		# The game recognizes that she has sent the money and updates Ida's game page
+		# She is told that she lost and is thanked for playing
+		
+		# Norma's game page remains unchanged
