@@ -3,9 +3,24 @@ from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.test import TestCase
 
-from gametheorygames.models import Game
+from gametheorygames.models import Game, LosingGame
 
 from gametheorygames.views import home_page, losing_game, play_losing_game
+
+from hashlib import sha256
+ 
+digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+ 
+def decode_base58(bc, length):
+    n = 0
+    for char in bc:
+        n = n * 58 + digits58.index(char)
+    return n.to_bytes(length, 'big')
+ 
+def is_valid_bitcoin_address(address):
+    bcbytes = decode_base58(address, 25)
+    return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
+
 
 def resolves_to_view(self, url, view):
 	found = resolve(url)
@@ -38,35 +53,68 @@ class AllPagesTest(TestCase):
 class PlayLosingGameTest(TestCase):
 	
 	def test_uses_losing_game_template(self):
-		game = Game.objects.create()
+		game = LosingGame.objects.create()
 		response = self.client.get('/gametheorygames/losing_game/%d/' % (game.id,))
 		self.assertTemplateUsed(response, 'play_losing_game.html')
 	
 	def test_losing_game_resolves_to_view(self):
-		game = Game.objects.create()
+		game = LosingGame.objects.create()
 		found = resolve('/gametheorygames/losing_game/%d/' % (game.id,))
 		self.assertEqual(found.func, play_losing_game)
 		
 	def test_create_losing_game_from_POST(self):
 		self.client.post('/gametheorygames/losing_game/new')
 		
+		self.assertEqual(LosingGame.objects.count(), 1)
 		self.assertEqual(Game.objects.count(), 1)
 		
-	def test_create_losing_game_sends_Coinbase_iframe_request(self):
-		pass
+	def test_create_losing_game_has_valid_address(self):
+		self.client.post('/gametheorygames/losing_game/new')
+		
+		game = LosingGame.objects.first()
+		
+		self.assertTrue(is_valid_bitcoin_address(game.depositAddress))
+		
+	def test_game_initial_state_correct(self):
+		game = LosingGame.objects.create()
+		
+		self.assertEqual(game.state, "CREATED")
+		
+	def test_coinbase_create_iframe_callback_url_resolves_and_changes_game_state(self):
+		game = LosingGame.objects.create()
+		
+		self.client.post(
+			'/gametheorygames/losing_game/%d/coinbase_callback/' % (game.id,),
+			data={
+			  "success": True,
+			  "button": {
+				"code": "93865b9cae83706ae59220c013bc0afd",
+				"type": "buy_now",
+				"style": "custom_large",
+				"text": "Pay With Bitcoin",
+				"name": "test",
+				"description": "Sample description",
+				"custom": "Order123",
+				"callback_url": "/gametheorygames/losing_game/%d/coinbase_callback/" % (game.id,),
+				"price": {
+				  "cents": 123,
+				  "currency_iso": "USD"
+				}
+			  }
+			}
+		)
+		
+		self.assertEqual(game.state, "LIVE")
 		
 	def test_create_losing_game_has_unique_order_number(self):
 		pass
-
-	def test_game_initial_state_correct(self):
+	
+	def test_coinbase_iframe_callback_is_validated(self):
 		pass
-
-	def test_bitcoin_received_callback_url_resolves(self):
+	
+	def test_coinbase_iframe_callback_only_works_once(self):
 		pass
-		
-	def test_bitcoin_received_callback_url_changes_game_state(self):
-		pass
-		
+	
 	def test_page_checks_game_state_change(self):
 		pass
 	
