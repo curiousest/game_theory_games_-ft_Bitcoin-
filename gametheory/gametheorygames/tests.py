@@ -1,11 +1,12 @@
+from sys import stderr
 from django.core.urlresolvers import resolve
 from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.test import TestCase
 
-from gametheorygames.models import Game, LosingGame
+from gametheorygames.models import GAME_STATES, Game, LosingGame
 
-from gametheorygames.views import home_page, losing_game, play_losing_game
+from gametheorygames.views import home_page, losing_game, play_losing_game, losing_game_Coinbase_callback
 
 from hashlib import sha256
  
@@ -20,7 +21,6 @@ def decode_base58(bc, length):
 def is_valid_bitcoin_address(address):
     bcbytes = decode_base58(address, 25)
     return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
-
 
 def resolves_to_view(self, url, view):
 	found = resolve(url)
@@ -78,13 +78,19 @@ class PlayLosingGameTest(TestCase):
 	def test_game_initial_state_correct(self):
 		game = LosingGame.objects.create()
 		
-		self.assertEqual(game.state, "CREATED")
+		self.assertEqual(game.state, GAME_STATES["CREATED"])
 		
-	def test_coinbase_create_iframe_callback_url_resolves_and_changes_game_state(self):
+	def test_losing_game_coinbase_callback_url_resolves(self):
 		game = LosingGame.objects.create()
+		found = resolve('/gametheorygames/losing_game/%d/coinbase_callback/' % (game.id,))
+		self.assertEqual(found.func, losing_game_Coinbase_callback)
 		
+	def test_coinbase_create_iframe_callback_url_changes_game_state(self):
+		
+		game = LosingGame.objects.create()
+
 		self.client.post(
-			'/gametheorygames/losing_game/%d/coinbase_callback/' % (game.id,),
+			'/gametheorygames/losing_game/' + game.get_Coinbase_callback_url(),
 			data={
 			  "success": True,
 			  "button": {
@@ -104,7 +110,9 @@ class PlayLosingGameTest(TestCase):
 			}
 		)
 		
-		self.assertEqual(game.state, "LIVE")
+		game = LosingGame.objects.get(id = game.id)
+		
+		self.assertEqual(game.state, GAME_STATES["LIVE"])
 		
 	def test_create_losing_game_has_unique_order_number(self):
 		pass
