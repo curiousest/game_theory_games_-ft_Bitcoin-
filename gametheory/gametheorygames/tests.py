@@ -68,13 +68,6 @@ class PlayLosingGameTest(TestCase):
 		self.assertEqual(LosingGame.objects.count(), 1)
 		self.assertEqual(Game.objects.count(), 1)
 		
-	def test_create_losing_game_has_valid_address(self):
-		self.client.post('/gametheorygames/losing_game/new')
-		
-		game = LosingGame.objects.first()
-		
-		self.assertTrue(is_valid_bitcoin_address(game.depositAddress))
-		
 	def test_game_initial_state_correct(self):
 		game = LosingGame.objects.create()
 		
@@ -113,6 +106,41 @@ class PlayLosingGameTest(TestCase):
 		game = LosingGame.objects.get(id = game.id)
 		
 		self.assertEqual(game.state, GAME_STATES["LIVE"])
+		
+	def test_bad_code_coinbase_create_iframe_callback_url_doesnt_change_game_state(self):
+		game = LosingGame.objects.create()
+
+		self.client.post(
+			'/gametheorygames/losing_game/' + game.get_Coinbase_callback_url(),
+			data={
+			  "success": True,
+			  "button": {
+				"code": "random9cae83706ae59220c013bc0afd",
+				"type": "buy_now",
+				"style": "custom_large",
+				"text": "Pay With Bitcoin",
+				"name": "test",
+				"description": "Sample description",
+				"custom": "Order123",
+				"callback_url": "/gametheorygames/losing_game/" + game.get_Coinbase_callback_url(),
+				"price": {
+				  "cents": 123,
+				  "currency_iso": "USD"
+				}
+			  }
+			}
+		)
+		
+		game = LosingGame.objects.get(id = game.id)
+		
+		self.assertEqual(game.state, GAME_STATES["CREATED"])
+		
+	def test_create_losing_game_gets_valid_bitcoin_address(self):
+		self.client.post('/gametheorygames/losing_game/new')
+		
+		game = LosingGame.objects.first()
+		
+		self.assertTrue(is_valid_bitcoin_address(game.depositAddress))	
 		
 	def test_create_losing_game_has_unique_order_number(self):
 		pass
